@@ -1,10 +1,10 @@
-package com.example.adoptme
+package com.example.adoptme.presentation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.example.adoptme.ui.theme.Theme
-import com.example.adoptme.view.BaseScreen
+import com.example.adoptme.presentation.ui.theme.Theme
+import com.example.adoptme.presentation.screens.BaseScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 

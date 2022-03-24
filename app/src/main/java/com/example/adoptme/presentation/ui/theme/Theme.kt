@@ -1,4 +1,4 @@
-package com.example.adoptme.ui.theme
+package com.example.adoptme.presentation.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
@@ -7,17 +7,19 @@ import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 
 private val DarkColorPalette = darkColors(
-        primary = Purple200,
-        primaryVariant = Purple700,
-        secondary = Teal200,
-        background = Natural700
+        primary = Cyan200,
+        primaryVariant = Cyan500,
+        secondary = Cyan700,
+        background = Natural700,
+        surface = Natural700,
 )
 
 private val LightColorPalette = lightColors(
-        primary = Purple500,
-        primaryVariant = Purple700,
-        secondary = Teal200,
-        background = Natural200
+        primary = Cyan500,
+        primaryVariant = Cyan700,
+        secondary = Cyan200,
+        background = Natural200,
+        surface = Natural200,
 
   /* Other default colors to override
 background = Color.White,

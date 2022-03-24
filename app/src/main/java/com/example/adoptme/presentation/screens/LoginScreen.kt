@@ -1,4 +1,4 @@
-package com.example.adoptme.view
+package com.example.adoptme.presentation.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,7 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import com.example.adoptme.viewmodel.AuthViewModel
+import com.example.adoptme.presentation.AuthViewModel
 
 @Composable
 fun LoginScreen(viewModel: AuthViewModel) {

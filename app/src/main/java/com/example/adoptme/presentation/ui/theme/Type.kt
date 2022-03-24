@@ -1,4 +1,4 @@
-package com.example.adoptme.ui.theme
+package com.example.adoptme.presentation.ui.theme
 
 import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle

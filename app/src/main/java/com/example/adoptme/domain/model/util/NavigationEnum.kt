@@ -1,4 +1,4 @@
-package com.example.adoptme.model.util
+package com.example.adoptme.domain.model.util
 
 import androidx.compose.runtime.State
 import com.example.adoptme.R
@@ -12,6 +12,9 @@ enum class NavigationEnum (val title: Int) {
   ),
   Welcome(
     title = R.string.welcome
+  ),
+  Pet(
+    title = R.string.pet
   );
 
   companion object {
@@ -28,6 +31,7 @@ enum class NavigationEnum (val title: Int) {
           Welcome.name -> Welcome
           Login.name -> Welcome
           Register.name -> Welcome
+          Pet.name -> Pet
           null -> Welcome
           else -> throw IllegalArgumentException("Route $route is not recognized.")
         }

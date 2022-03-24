@@ -1,4 +1,4 @@
-package com.example.adoptme.viewmodel
+package com.example.adoptme.presentation
 
 import android.app.Application
 import android.util.Log
@@ -30,6 +30,10 @@ class AuthViewModel @Inject constructor(application: Application) : ViewModel() 
   private val _password = mutableStateOf("")
   val password: State<String> = _password
 
+  private val _petId = mutableStateOf("")
+  val petId: State<String> = _petId
+
+
   // Setters
   fun setUserEmail(email: String) {
     _userEmail.value = email
@@ -41,6 +45,10 @@ class AuthViewModel @Inject constructor(application: Application) : ViewModel() 
 
   fun setError(error: String) {
     _error.value = error
+  }
+
+  fun setpetId(petId: String) {
+    _petId.value = petId
   }
 
   init {

@@ -1,8 +1,11 @@
 <resources>
-    <string name="app_name">App1</string>
+  <string name="app_name">Adopt me</string>
   <string name="welcome">Welcome</string>
   <string name="login">Bejelentkezés</string>
   <string name="register">Regisztráció</string>
   <string name="password">Jelszó</string>
   <string name="email">E-mail</string>
+    <string name="petMoreButton">Tovább</string>
+    <string name="exit">Kilépés</string>
+    <string name="pet">Állat</string>
 </resources>

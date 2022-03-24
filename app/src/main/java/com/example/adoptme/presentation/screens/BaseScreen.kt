@@ -1,4 +1,4 @@
-package com.example.adoptme.view
+package com.example.adoptme.presentation.screens
 
 import android.annotation.SuppressLint
 import androidx.compose.material.*
@@ -9,8 +9,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.adoptme.model.util.*
-import com.example.adoptme.viewmodel.AuthViewModel
+import com.example.adoptme.domain.model.util.*
+import com.example.adoptme.presentation.AuthViewModel
+import com.example.adoptme.presentation.PetsViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -21,10 +22,13 @@ fun NavigateBetweenScreen(
   val startDestination =
     if (loginViewModel.isLoggedIn.value) NavigationEnum.Welcome.name else NavigationEnum.Login.name
 
+  val petsViewModel: PetsViewModel = hiltViewModel()
+
   NavHost(navController = navController, startDestination = startDestination) {
     loginPage(this, navController, loginViewModel)
     registerPage(this, navController, loginViewModel)
-    welcomePage(this, loginViewModel)
+    mainPage(this, navController, petsViewModel, loginViewModel)
+    petPage(this, navController, petsViewModel, loginViewModel)
   }
 }
 
@@ -53,13 +57,23 @@ fun BaseScreen(viewModel: AuthViewModel = hiltViewModel()) {
       ) {
         AuthTopBar(currentScreen, scope, scaffoldState)
       } else
-        MainTopBar(currentScreen)
+        MainTopBar(currentScreen, scope, scaffoldState)
     },
     drawerContent = {
-      if (currentScreen == NavigationEnum.Register
-        || currentScreen == NavigationEnum.Login
-      ) {
-        AuthDrawerContent(navController = navController, scope = scope, scaffoldState = scaffoldState)
+      if (viewModel.isLoggedIn.value) {
+        MainDrawerContent(
+          navController = navController,
+          scope = scope,
+          scaffoldState = scaffoldState,
+          viewModel = viewModel
+        )
+
+      } else {
+        AuthDrawerContent(
+          navController = navController,
+          scope = scope,
+          scaffoldState = scaffoldState
+        )
       }
     }
   ) {
