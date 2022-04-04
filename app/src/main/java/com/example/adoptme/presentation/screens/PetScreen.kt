@@ -1,16 +1,21 @@
 package com.example.adoptme.presentation.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,24 +27,21 @@ import com.example.adoptme.presentation.AuthViewModel
 import com.example.adoptme.presentation.PetsViewModel
 import java.util.*
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun PetScreen(petsViewModel: PetsViewModel, authViewModel: AuthViewModel) {
 
-  when (val petsResponse = petsViewModel.data.value) {
-    is Response.Success -> petPreview(petsViewModel = petsViewModel)
-  }
-}
-
-@Composable
-fun petPreview(petsViewModel: PetsViewModel) {
+  val scrollState = rememberScrollState()
 
   when (val petsResponse = petsViewModel.data.value) {
-    is Response.Success ->
+    is Response.Success -> {
       Column(
         modifier = Modifier
           .fillMaxSize()
-          .verticalScroll(rememberScrollState())
+          .verticalScroll(scrollState)
+          .background(MaterialTheme.colors.background)
       ) {
+
         val pet = petsResponse.data.first()
         Image(
           painter = rememberImagePainter(data = pet.image, builder = {
@@ -55,10 +57,10 @@ fun petPreview(petsViewModel: PetsViewModel) {
 
         Column(
           modifier = Modifier
-            .padding(16.dp)
+            .padding(all = 16.dp)
         ) {
 
-          pet.name?.let { Text(text = it, fontSize = 32.sp) }
+          pet.name?.let { Text(text = it, fontSize = 32.sp, color = MaterialTheme.colors.onBackground) }
           Row(
             modifier = Modifier
               .padding(vertical = 16.dp)
@@ -79,9 +81,10 @@ fun petPreview(petsViewModel: PetsViewModel) {
             pet.sex?.let { petDataCard(label = "Nem", text = "${it}") }
             pet.size?.let { petDataCard(label = "Méret", text = it) }
           }
-          pet.description?.let { Text(text = it) }
+          pet.description?.let { Text(text = it, color = MaterialTheme.colors.onBackground) }
         }
       }
+    }
   }
 }
 

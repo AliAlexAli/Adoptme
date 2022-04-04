@@ -1,5 +1,8 @@
 package com.example.adoptme.presentation.screens
 
+import android.annotation.SuppressLint
+import android.util.Log
+import android.widget.LinearLayout
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.rememberImagePainter
 import com.example.adoptme.R
 import com.example.adoptme.domain.model.Pet
@@ -27,16 +32,66 @@ import com.example.adoptme.presentation.PetsViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.launch
 
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun MainScreen(
   navController: NavController,
   viewModel: PetsViewModel,
   authViewModel: AuthViewModel
 ) {
-  viewModel.getPets()
-  PetsList(navController, viewModel = viewModel, authViewModel)
+  val backstackEntry = navController.currentBackStackEntryAsState()
+
+  val scaffoldState = rememberScaffoldState()
+  val scope = rememberCoroutineScope()
+  val currentScreen =
+    NavigationEnum.fromRoute(backstackEntry.value?.destination?.route, authViewModel.isLoggedIn)
+
+  if (authViewModel.error.value.isNotBlank()) scope.launch {
+    scaffoldState.snackbarHostState.showSnackbar(
+      authViewModel.error.value
+    )
+  }
+
+  Scaffold(
+    scaffoldState = scaffoldState,
+    topBar = {
+      if (currentScreen == NavigationEnum.Register
+        || currentScreen == NavigationEnum.Login
+      ) {
+        AuthTopBar(currentScreen, scope, scaffoldState)
+      } else
+        MainTopBar(currentScreen, scope, scaffoldState)
+    },
+    drawerContent = {
+      if (authViewModel.isLoggedIn.value) {
+        MainDrawerContent(
+          navController = navController,
+          scope = scope,
+          scaffoldState = scaffoldState,
+          viewModel = authViewModel
+        )
+
+      } else {
+        AuthDrawerContent(
+          navController = navController,
+          scope = scope,
+          scaffoldState = scaffoldState
+        )
+      }
+    },
+    floatingActionButton = { PetFloatingActionButton(viewModel) }
+  ) {
+    viewModel.getPets()
+    when (val r = viewModel.uploadResponse.value) {
+      is Response.Success -> Log.d("Response Changed", r.data)
+      is Response.Loading -> Log.d("Response Changed", "Loading")
+      is Response.Error -> Log.d("Response Changed", r.message)
+    }
+    PetsList(navController, viewModel = viewModel, authViewModel)
+  }
 }
 
 @OptIn(InternalCoroutinesApi::class)
@@ -46,26 +101,26 @@ fun PetsList(navController: NavController, viewModel: PetsViewModel, authViewMod
     is Response.Loading -> CircularProgressIndicator()
     is Response.Success -> {
       SwipeRefresh(
+        modifier = Modifier.fillMaxSize(),
         state = rememberSwipeRefreshState(isRefreshing = false),
         onRefresh = { viewModel.getPets() }) {
-        LazyColumn(Modifier.padding(all = 10.dp)) {
-          items(items = petsResponse.data) { pet ->
-            PetCard(
-              pet = pet,
-              viewModel = viewModel,
-              authViewModel = authViewModel,
-              navController = navController
-            )
+        if (petsResponse.data != null)
+          LazyColumn(Modifier.padding(all = 10.dp)) {
+            items(items = petsResponse.data) { pet ->
+              PetCard(
+                pet = pet,
+                viewModel = viewModel,
+                authViewModel = authViewModel,
+                navController = navController
+              )
+            }
           }
-        }
       }
-
-      AddPetFloatingActionButton(viewModel)
-
       if (viewModel.showAddPet.value) {
         AddPetDialog(viewModel = viewModel)
       }
     }
+
     is Error -> petsResponse.message?.let {
       Text(
         text = it,
@@ -105,6 +160,7 @@ fun PetCard(
       )
       Column(
         modifier = Modifier
+          .fillMaxWidth()
           .padding(all = 10.dp),
         verticalArrangement = Arrangement.SpaceEvenly
       ) {

@@ -17,7 +17,7 @@ fun loginPage(
 ) {
   builder.composable(route = NavigationEnum.Login.name) {
     loginViewModel.setError("")
-    LoginScreen(
+    LoginScreen(navController,
       viewModel = loginViewModel
     )
   }
@@ -30,7 +30,7 @@ fun registerPage(
 ) {
   builder.composable(route = NavigationEnum.Register.name) {
     loginViewModel.setError("")
-    RegScreen(loginViewModel)
+    RegScreen(navController, loginViewModel)
   }
 }
 

@@ -3,13 +3,14 @@ package com.example.adoptme.di
 import com.example.adoptme.core.Constants
 import com.example.adoptme.data.repository.PetsRepositoryImpl
 import com.example.adoptme.domain.repository.PetsRepository
-import com.example.adoptme.domain.use_case.AddPet
-import com.example.adoptme.domain.use_case.GetPet
-import com.example.adoptme.domain.use_case.GetPets
-import com.example.adoptme.domain.use_case.UseCases
+import com.example.adoptme.domain.use_case.*
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.ktx.storage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,15 +29,23 @@ object AppModule {
   fun providePetsQuery(petsRef: CollectionReference) = petsRef.orderBy("name")
 
   @Provides
-  fun provideBooksRepository(
+  fun provideFirebaseStorage() = Firebase.storage
+
+  @Provides
+  fun provideStorageRef(st: FirebaseStorage) = st.reference
+
+  @Provides
+  fun providePetsRepository(
     petsRef: CollectionReference,
-    petsQuery: Query
-  ): PetsRepository = PetsRepositoryImpl(petsRef, petsQuery)
+    petsQuery: Query,
+    storageRef: StorageReference
+  ): PetsRepository = PetsRepositoryImpl(petsRef, petsQuery, storageRef)
 
   @Provides
   fun provideUseCases(repository: PetsRepository) = UseCases(
     getPets = GetPets(repository),
     getPet = GetPet(repository),
-    addPet = AddPet(repository)
+    addPet = AddPet(repository),
+    addImage = AddImage(repository)
   )
 }

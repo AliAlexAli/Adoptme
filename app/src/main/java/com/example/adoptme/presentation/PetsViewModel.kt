@@ -1,5 +1,6 @@
 package com.example.adoptme.presentation
 
+import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -8,7 +9,9 @@ import com.example.adoptme.domain.model.Pet
 import com.example.adoptme.domain.model.Response
 import com.example.adoptme.domain.use_case.UseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 import javax.inject.Inject
 
@@ -16,14 +19,15 @@ import javax.inject.Inject
 class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewModel() {
 
   private val _data = mutableStateOf<Response<ArrayList<Pet>>>(Response.Loading)
-  val data: State<Response<ArrayList<Pet>>> = _data
+  var data: State<Response<ArrayList<Pet>>> = _data
 
-  var showAddPet = mutableStateOf(false)
+  val showAddPet = mutableStateOf(false)
+  val filterSize = mutableStateOf("")
+  val filterSex = mutableStateOf("")
 
-
-  fun getPets() {
+  fun getPets(sex: String = "", size: String = "") {
     viewModelScope.launch {
-      useCases.getPets()
+      useCases.getPets(filterSex.value, filterSize.value)
         .collect() { response -> _data.value = response as Response<ArrayList<Pet>> }
     }
   }
@@ -41,12 +45,37 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
     sex: String?,
     size: String?,
     description: String?,
-    image: String?
+    image: Uri?
   ) {
     viewModelScope.launch {
+      if (image != null) {
+        withContext(Dispatchers.Default) {
+          addImage("id", image)
+        }
+      }
+
       _data.value = Response.Loading
-      useCases.addPet(name, birth, sex, size, description, image)
-        .collect() { response -> _data.value = response as Response<ArrayList<Pet>> }
+      if (uploadResponse.value is Response.Success<String>)
+        useCases.addPet(
+          name,
+          birth,
+          sex,
+          size,
+          description,
+          (uploadResponse.value as Response.Success<String>).data
+        )
+          .collect() { response -> _data.value = response as Response<ArrayList<Pet>> }
+      getPets(filterSex.value, filterSize.value)
     }
   }
+
+  private val _uploadResponse = mutableStateOf<Response<String>>(Response.Loading)
+  var uploadResponse: State<Response<String>> = _uploadResponse
+
+  suspend fun addImage(filename: String, file: Uri): Boolean {
+    useCases.addImage(filename + ".jpg", file)
+      .collect() { response -> _uploadResponse.value = response as Response<String> }
+    return true
+  }
+
 }
