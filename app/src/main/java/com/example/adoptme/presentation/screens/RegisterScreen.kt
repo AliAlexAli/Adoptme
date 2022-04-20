@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +28,8 @@ fun RegScreen(navController: NavController, viewModel: AuthViewModel) {
   val currentScreen =
     NavigationEnum.fromRoute(backstackEntry.value?.destination?.route, viewModel.isLoggedIn)
 
+  if(viewModel.isLoggedIn.value) LaunchedEffect(Unit){ navController.navigate(NavigationEnum.Main.name)}
+
   if (viewModel.error.value.isNotBlank()) scope.launch {
     scaffoldState.snackbarHostState.showSnackbar(
       viewModel.error.value
@@ -36,12 +39,7 @@ fun RegScreen(navController: NavController, viewModel: AuthViewModel) {
   Scaffold(
     scaffoldState = scaffoldState,
     topBar = {
-      if (currentScreen == NavigationEnum.Register
-        || currentScreen == NavigationEnum.Login
-      ) {
         AuthTopBar(currentScreen, scope, scaffoldState)
-      } else
-        MainTopBar(currentScreen, scope, scaffoldState)
     },
     drawerContent = {
       if (viewModel.isLoggedIn.value) {

@@ -1,6 +1,5 @@
 package com.example.adoptme.presentation.screens
 
-import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Context
 import android.net.Uri
@@ -15,10 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -34,7 +30,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.adoptme.R
 import com.example.adoptme.domain.model.util.NavigationEnum
 import com.example.adoptme.presentation.AuthViewModel
@@ -138,11 +133,13 @@ fun AuthTopBar(
 
 @Composable
 fun MainTopBar(
-  currentScreen: NavigationEnum, scope: CoroutineScope, scaffoldState: ScaffoldState
+  currentScreen: NavigationEnum,
+  scope: CoroutineScope,
+  scaffoldState: ScaffoldState,
+  viewModel: PetsViewModel
 ) {
   TopAppBar(
-    title = { Text(text = stringResource(currentScreen.title)) },
-
+    title = { Text(text = "") },
     navigationIcon = {
       IconButton(onClick = {
         scope.launch {
@@ -150,6 +147,11 @@ fun MainTopBar(
         }
       }) {
         Icon(Icons.Default.Menu, "Menu Icon")
+      }
+    },
+    actions = {
+      IconButton(onClick = { viewModel.showSearchDialog.value = true }) {
+        Icon(Icons.Default.Search, "Search Icon")
       }
     }
   )
@@ -224,7 +226,7 @@ fun MainDrawerContent(
 }
 
 @Composable
-fun PetFloatingActionButton(viewModel: PetsViewModel) {
+fun PetFloatingActionButton(viewModel: PetsViewModel, authViewModel: AuthViewModel) {
   FloatingActionButton(
     onClick = {
       viewModel.showAddPet.value = true
@@ -235,6 +237,93 @@ fun PetFloatingActionButton(viewModel: PetsViewModel) {
       contentDescription = "Add new pet"
     )
   }
+}
+
+@Composable
+fun SearchDialog(viewModel: PetsViewModel) {
+  var size by remember { mutableStateOf("") }
+  var sex by remember { mutableStateOf("") }
+  val focusRequester = FocusRequester()
+
+  AlertDialog(
+    onDismissRequest = {
+      viewModel.showAddPet.value = false
+    },
+    text = {
+      Column {
+        Text("Nem")
+        Row {
+          RadioButton(selected = sex == "Kan", onClick = { sex = "Kan" })
+          Text(
+            text = "Kan",
+            modifier = Modifier
+              .clickable(onClick = { sex = "Kan" })
+              .padding(start = 4.dp)
+          )
+          Spacer(modifier = Modifier.size(4.dp))
+          RadioButton(selected = sex == "Szuka", onClick = { sex = "Szuka" })
+          Text(
+            text = "Szuka",
+            modifier = Modifier
+              .clickable(onClick = { sex = "Szuka" })
+              .padding(start = 4.dp)
+          )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Méret")
+        Row {
+          RadioButton(selected = size == "Kicsi", onClick = { size = "Kicsi" })
+          Text(
+            text = "Kicsi",
+            modifier = Modifier
+              .clickable(onClick = { size = "Kicsi" })
+              .padding(start = 4.dp)
+          )
+          Spacer(modifier = Modifier.size(4.dp))
+          RadioButton(selected = size == "Közepes", onClick = { size = "Közepes" })
+          Text(
+            text = "Közepes",
+            modifier = Modifier
+              .clickable(onClick = { size = "Közepes" })
+              .padding(start = 4.dp)
+          )
+          Spacer(modifier = Modifier.size(4.dp))
+          RadioButton(selected = size == "Nagy", onClick = { size = "Nagy" })
+          Text(
+            text = "Nagy",
+            modifier = Modifier
+              .clickable(onClick = { size = "Nagy" })
+              .padding(start = 4.dp)
+          )
+        }
+      }
+    },
+
+    confirmButton = {
+      TextButton(
+        onClick = {
+          viewModel.showSearchDialog.value = false
+          viewModel.getPets(sex, size)
+        }
+      ) {
+        Text(
+          text = "Keresés"
+        )
+      }
+    },
+    dismissButton = {
+      TextButton(
+        onClick = {
+          viewModel.showSearchDialog.value = false
+        }
+      ) {
+        Text(
+          text = "Mégse"
+        )
+      }
+    }
+
+  )
 }
 
 @Composable
@@ -361,7 +450,8 @@ fun AddPetDialog(viewModel: PetsViewModel) {
             sex,
             size,
             description,
-            image.value
+            image.value,
+            viewModel.userId.value
           )
         }
       ) {

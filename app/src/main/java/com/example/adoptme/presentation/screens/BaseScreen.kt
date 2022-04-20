@@ -15,9 +15,7 @@ fun NavigateBetweenScreen(
   navController: NavHostController,
   loginViewModel: AuthViewModel = hiltViewModel()
 ) {
-  val startDestination =
-    if (loginViewModel.isLoggedIn.value) NavigationEnum.Welcome.name else NavigationEnum.Login.name
-
+  val startDestination = NavigationEnum.Main.name
   val petsViewModel: PetsViewModel = hiltViewModel()
 
   NavHost(navController = navController, startDestination = startDestination) {

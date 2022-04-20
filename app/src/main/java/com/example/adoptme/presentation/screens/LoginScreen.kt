@@ -7,6 +7,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +29,8 @@ fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
   val scope = rememberCoroutineScope()
   val currentScreen =
     NavigationEnum.fromRoute(backstackEntry.value?.destination?.route, viewModel.isLoggedIn)
+
+  if(viewModel.isLoggedIn.value) LaunchedEffect(Unit){ navController.navigate(NavigationEnum.Main.name)}
 
   if (viewModel.error.value.isNotBlank()) scope.launch {
     scaffoldState.snackbarHostState.showSnackbar(

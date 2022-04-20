@@ -13,7 +13,8 @@ class AddPet(
     sex: String?,
     size: String?,
     description: String?,
-    image: String?
-  )  = repository.addPetToFirestore(name, birth, sex, size, description, image)
+    image: String?,
+    owner: String?
+  )  = repository.addPetToFirestore(name, birth, sex, size, description, image, owner)
 }
 

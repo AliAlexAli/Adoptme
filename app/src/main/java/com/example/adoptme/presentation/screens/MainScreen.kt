@@ -1,8 +1,6 @@
 package com.example.adoptme.presentation.screens
 
 import android.annotation.SuppressLint
-import android.util.Log
-import android.widget.LinearLayout
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -48,7 +46,6 @@ fun MainScreen(
   val scope = rememberCoroutineScope()
   val currentScreen =
     NavigationEnum.fromRoute(backstackEntry.value?.destination?.route, authViewModel.isLoggedIn)
-
   if (authViewModel.error.value.isNotBlank()) scope.launch {
     scaffoldState.snackbarHostState.showSnackbar(
       authViewModel.error.value
@@ -58,12 +55,7 @@ fun MainScreen(
   Scaffold(
     scaffoldState = scaffoldState,
     topBar = {
-      if (currentScreen == NavigationEnum.Register
-        || currentScreen == NavigationEnum.Login
-      ) {
-        AuthTopBar(currentScreen, scope, scaffoldState)
-      } else
-        MainTopBar(currentScreen, scope, scaffoldState)
+      MainTopBar(currentScreen, scope, scaffoldState, viewModel)
     },
     drawerContent = {
       if (authViewModel.isLoggedIn.value) {
@@ -82,23 +74,25 @@ fun MainScreen(
         )
       }
     },
-    floatingActionButton = { PetFloatingActionButton(viewModel) }
-  ) {
-    viewModel.getPets()
-    when (val r = viewModel.uploadResponse.value) {
-      is Response.Success -> Log.d("Response Changed", r.data)
-      is Response.Loading -> Log.d("Response Changed", "Loading")
-      is Response.Error -> Log.d("Response Changed", r.message)
+    floatingActionButton = {
+      if (authViewModel.isLoggedIn.value) {
+        PetFloatingActionButton(viewModel, authViewModel)
+      }
     }
+  ) {
     PetsList(navController, viewModel = viewModel, authViewModel)
   }
 }
+
 
 @OptIn(InternalCoroutinesApi::class)
 @Composable
 fun PetsList(navController: NavController, viewModel: PetsViewModel, authViewModel: AuthViewModel) {
   when (val petsResponse = viewModel.data.value) {
-    is Response.Loading -> CircularProgressIndicator()
+    is Response.Loading -> SwipeRefresh(
+      modifier = Modifier.fillMaxSize(),
+      state = rememberSwipeRefreshState(isRefreshing = true),
+      onRefresh = { viewModel.getPets() }) {}
     is Response.Success -> {
       SwipeRefresh(
         modifier = Modifier.fillMaxSize(),
@@ -118,6 +112,9 @@ fun PetsList(navController: NavController, viewModel: PetsViewModel, authViewMod
       }
       if (viewModel.showAddPet.value) {
         AddPetDialog(viewModel = viewModel)
+      }
+      if (viewModel.showSearchDialog.value) {
+        SearchDialog(viewModel = viewModel)
       }
     }
 
@@ -191,8 +188,8 @@ fun PetCard(
                 .background(MaterialTheme.colors.primary),
               onClick = {
                 authViewModel.setpetId(id)
-                viewModel.getPetById(id)
                 navController.navigate(NavigationEnum.Pet.name)
+
               }) {
               Text(
                 text = stringResource(id = R.string.petMoreButton),

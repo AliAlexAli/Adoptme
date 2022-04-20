@@ -1,8 +1,10 @@
 package com.example.adoptme.presentation
 
+import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.adoptme.domain.model.Pet
@@ -15,6 +17,7 @@ import kotlinx.coroutines.withContext
 import java.util.*
 import javax.inject.Inject
 
+
 @HiltViewModel
 class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewModel() {
 
@@ -22,17 +25,20 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
   var data: State<Response<ArrayList<Pet>>> = _data
 
   val showAddPet = mutableStateOf(false)
-  val filterSize = mutableStateOf("")
-  val filterSex = mutableStateOf("")
+  val showSearchDialog = mutableStateOf(false)
+
+  val userId = mutableStateOf<String>("")
 
   fun getPets(sex: String = "", size: String = "") {
+    _data.value = Response.Loading
     viewModelScope.launch {
-      useCases.getPets(filterSex.value, filterSize.value)
+      useCases.getPets(sex, size)
         .collect() { response -> _data.value = response as Response<ArrayList<Pet>> }
     }
   }
 
   fun getPetById(petId: String) {
+    _data.value = Response.Loading
     viewModelScope.launch {
       useCases.getPet(petId)
         .collect() { response -> _data.value = response as Response<ArrayList<Pet>> }
@@ -45,12 +51,13 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
     sex: String?,
     size: String?,
     description: String?,
-    image: Uri?
+    image: Uri?,
+    owner: String?
   ) {
     viewModelScope.launch {
       if (image != null) {
         withContext(Dispatchers.Default) {
-          addImage("id", image)
+          addImage("id.jpg", image)
         }
       }
 
@@ -62,10 +69,11 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
           sex,
           size,
           description,
-          (uploadResponse.value as Response.Success<String>).data
+          (uploadResponse.value as Response.Success<String>).data,
+          owner
         )
           .collect() { response -> _data.value = response as Response<ArrayList<Pet>> }
-      getPets(filterSex.value, filterSize.value)
+      getPets()
     }
   }
 
@@ -73,7 +81,7 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
   var uploadResponse: State<Response<String>> = _uploadResponse
 
   suspend fun addImage(filename: String, file: Uri): Boolean {
-    useCases.addImage(filename + ".jpg", file)
+    useCases.addImage(filename, file)
       .collect() { response -> _uploadResponse.value = response as Response<String> }
     return true
   }

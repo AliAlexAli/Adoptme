@@ -17,7 +17,8 @@ interface PetsRepository {
     sex: String?,
     size: String?,
     description: String?,
-    image: String?
+    image: String?,
+    owner: String?
   ): Flow<Response<Void?>>
 
   suspend fun addImageToStorage(fileName: String, file: Uri): Flow<Response<Void?>>

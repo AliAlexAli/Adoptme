@@ -11,7 +11,8 @@ class Pet @Inject constructor(
   val size: String?,
   val description: String?,
   val image: String?,
+  val owner: String?,
   val date: Date? = Calendar.getInstance().time
 ) {
-  constructor() : this(null, null, null, null, null, null, null)
+  constructor() : this(null, null, null, null, null, null, null, null)
 }

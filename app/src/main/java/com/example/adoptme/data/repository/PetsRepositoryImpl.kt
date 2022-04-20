@@ -24,7 +24,7 @@ class PetsRepositoryImpl @Inject constructor(
   private val storageRef: StorageReference
 ) : PetsRepository {
   override suspend fun getPetsFromFirestore(sex: String, size: String) = callbackFlow {
-    var ref = petsRef.whereNotEqualTo("id","")
+    var ref = petsRef.whereNotEqualTo("id","a")
     if(sex != "") ref = ref.whereEqualTo("sex", sex)
     if(size != "") ref = ref.whereEqualTo("size", size)
     val snapshotListener = ref
@@ -33,7 +33,7 @@ class PetsRepositoryImpl @Inject constructor(
           val pets = snapshot.toObjects(Pet::class.java)
           Response.Success(pets)
         } else {
-          Error(e?.message ?: e.toString())
+          Response.Error(e?.message ?: e.toString())
         }
         trySend(response).isSuccess
       }
@@ -50,7 +50,7 @@ class PetsRepositoryImpl @Inject constructor(
           val pets = snapshot.toObjects(Pet::class.java)
           Response.Success(pets)
         } else {
-          Error(e?.message ?: e.toString())
+          Response.Error(e?.message ?: e.toString())
         }
         trySend(response).isSuccess
       }
@@ -65,16 +65,17 @@ class PetsRepositoryImpl @Inject constructor(
     sex: String?,
     size: String?,
     description: String?,
-    image: String?
+    image: String?,
+    owner: String?
   ) = flow {
     try {
       emit(Response.Loading)
       val petId = petsRef.document().id
-      val pet = Pet(petId, name, birth, sex, size, description, image)
+      val pet = Pet(petId, name, birth, sex, size, description, image, owner)
       val addition = petsRef.document(petId).set(pet).await()
       emit(Response.Success(addition))
     } catch (e: Exception) {
-      emit(Error(e.message ?: e.toString()))
+      emit(Response.Error(e.message ?: e.toString()))
     }
   } as Flow<Response<Void?>>
 
@@ -83,7 +84,7 @@ class PetsRepositoryImpl @Inject constructor(
       var response =
         "https://firebasestorage.googleapis.com/v0/b/adoptme-36e2a.appspot.com/o/WE4CEX3HBhoNbeV9FLLI.jpg?alt=media&token=39c85f4b-9980-41dd-8984-11d889e1f4db"
       emit(Response.Loading)
-      var uploadTask = storageRef.child(fileName).putFile(file).continueWithTask { task ->
+      storageRef.child(fileName).putFile(file).continueWithTask { task ->
         if (!task.isSuccessful) task.exception?.let {
           throw it
         }

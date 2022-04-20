@@ -1,5 +1,7 @@
 package com.example.adoptme.domain.model.util
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -35,9 +37,11 @@ fun registerPage(
 }
 
 fun mainPage(builder: NavGraphBuilder, navController: NavHostController, petsViewModel: PetsViewModel, loginViewModel: AuthViewModel) {
-  builder.composable(route = NavigationEnum.Welcome.name) {
+  builder.composable(route = NavigationEnum.Main.name) {
     loginViewModel.setError("")
-    petsViewModel.getPets()
+    LaunchedEffect(Unit) {
+      petsViewModel.getPets()
+    }
     MainScreen(navController,petsViewModel, loginViewModel)
   }
 }
@@ -45,7 +49,9 @@ fun mainPage(builder: NavGraphBuilder, navController: NavHostController, petsVie
 fun petPage(builder: NavGraphBuilder, navController: NavHostController, petsViewModel: PetsViewModel, viewModel: AuthViewModel) {
   builder.composable(route = NavigationEnum.Pet.name) {
     viewModel.setError("")
-    petsViewModel.getPetById(viewModel.petId.value);
+    LaunchedEffect(Unit) {
+      petsViewModel.getPetById(viewModel.petId.value);
+    }
     PetScreen(petsViewModel, viewModel)
   }
 }
