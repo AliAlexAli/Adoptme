@@ -15,6 +15,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
+
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -24,6 +26,10 @@ object AppModule {
 
   @Provides
   fun providePetsRef(db: FirebaseFirestore) = db.collection(Constants.PETS)
+
+  @Provides
+  @Named("ownersRef")
+  fun provideOwnersRef(db: FirebaseFirestore) = db.collection(Constants.OWNERS)
 
   @Provides
   fun providePetsQuery(petsRef: CollectionReference) = petsRef.orderBy("name")
@@ -38,14 +44,19 @@ object AppModule {
   fun providePetsRepository(
     petsRef: CollectionReference,
     petsQuery: Query,
-    storageRef: StorageReference
-  ): PetsRepository = PetsRepositoryImpl(petsRef, petsQuery, storageRef)
+    storageRef: StorageReference,
+    @Named("ownersRef")
+    ownersRef: CollectionReference
+  ): PetsRepository = PetsRepositoryImpl(petsRef, petsQuery, storageRef, ownersRef)
 
   @Provides
   fun provideUseCases(repository: PetsRepository) = UseCases(
     getPets = GetPets(repository),
     getPet = GetPet(repository),
     addPet = AddPet(repository),
-    addImage = AddImage(repository)
+    addImage = AddImage(repository),
+    getOwner = GetOwner(repository),
+    getOwnerByEmail = GetOwnerByEmail(repository),
+    addOwner = AddOwner(repository)
   )
 }

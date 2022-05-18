@@ -46,16 +46,25 @@ fun MainScreen(
   val scope = rememberCoroutineScope()
   val currentScreen =
     NavigationEnum.fromRoute(backstackEntry.value?.destination?.route, authViewModel.isLoggedIn)
+
   if (authViewModel.error.value.isNotBlank()) scope.launch {
     scaffoldState.snackbarHostState.showSnackbar(
       authViewModel.error.value
     )
   }
 
+  when (val petsResponse = viewModel.data.value) {
+    is Response.Error -> scope.launch {
+      scaffoldState.snackbarHostState.showSnackbar(
+        petsResponse.message
+      )
+    }
+  }
+
   Scaffold(
     scaffoldState = scaffoldState,
     topBar = {
-      MainTopBar(currentScreen, scope, scaffoldState, viewModel)
+      MainTopBar(scope, scaffoldState, viewModel)
     },
     drawerContent = {
       if (authViewModel.isLoggedIn.value) {
@@ -76,7 +85,7 @@ fun MainScreen(
     },
     floatingActionButton = {
       if (authViewModel.isLoggedIn.value) {
-        PetFloatingActionButton(viewModel, authViewModel)
+        PetFloatingActionButton(viewModel)
       }
     }
   ) {
@@ -98,20 +107,19 @@ fun PetsList(navController: NavController, viewModel: PetsViewModel, authViewMod
         modifier = Modifier.fillMaxSize(),
         state = rememberSwipeRefreshState(isRefreshing = false),
         onRefresh = { viewModel.getPets() }) {
-        if (petsResponse.data != null)
-          LazyColumn(Modifier.padding(all = 10.dp)) {
-            items(items = petsResponse.data) { pet ->
-              PetCard(
-                pet = pet,
-                viewModel = viewModel,
-                authViewModel = authViewModel,
-                navController = navController
-              )
-            }
+        LazyColumn(Modifier.padding(all = 10.dp)) {
+          items(items = petsResponse.data) { pet ->
+            PetCard(
+              pet = pet,
+              viewModel = viewModel,
+              authViewModel = authViewModel,
+              navController = navController
+            )
           }
+        }
       }
       if (viewModel.showAddPet.value) {
-        AddPetDialog(viewModel = viewModel)
+        AddPetDialog(viewModel = viewModel, authViewModel = authViewModel)
       }
       if (viewModel.showSearchDialog.value) {
         SearchDialog(viewModel = viewModel)
@@ -200,14 +208,5 @@ fun PetCard(
         }
       }
     }
-  }
-}
-
-@Composable
-fun CircularProgressBar(
-  isDisplayed: Boolean
-) {
-  if (isDisplayed) {
-    CircularProgressIndicator()
   }
 }

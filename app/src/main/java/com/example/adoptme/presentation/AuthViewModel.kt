@@ -1,10 +1,12 @@
 package com.example.adoptme.presentation
 
-import android.app.Application
 import android.util.Log
-import androidx.compose.runtime.*
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.adoptme.domain.model.Owner
+import com.example.adoptme.domain.use_case.UseCases
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,7 +16,7 @@ import javax.inject.Inject
 private const val TAG = "AuthViewModel"
 
 @HiltViewModel
-class AuthViewModel @Inject constructor(application: Application) : ViewModel() {
+class AuthViewModel @Inject constructor(private val useCases: UseCases) : ViewModel() {
 
   private var auth = Firebase.auth
 
@@ -33,6 +35,20 @@ class AuthViewModel @Inject constructor(application: Application) : ViewModel() 
   private val _petId = mutableStateOf("")
   val petId: State<String> = _petId
 
+  private val _name = mutableStateOf<String>("")
+  val name: State<String> = _name
+
+  private val _phone = mutableStateOf<String>("")
+  val phone: State<String> = _phone
+
+  private val _address = mutableStateOf<String>("")
+  val address: State<String> = _address
+
+  private val _website = mutableStateOf<String>("")
+  val website: State<String> = _website
+
+  private val _user = mutableStateOf<Owner>(Owner())
+  val user: State<Owner> = _user
 
   // Setters
   fun setUserEmail(email: String) {
@@ -51,8 +67,32 @@ class AuthViewModel @Inject constructor(application: Application) : ViewModel() 
     _petId.value = petId
   }
 
+  fun setName(name: String) {
+    _name.value = name
+  }
+
+  fun setPhone(phone: String) {
+    _phone.value = phone
+  }
+
+  fun setAddress(address: String) {
+    _address.value = address
+  }
+
+  fun setWebsite(website: String) {
+    _website.value = website
+  }
+
   init {
     _isLoggedIn.value = false
+  }
+
+  fun getUserByEmail(email: String) {
+    _user.value = Owner()
+    viewModelScope.launch {
+      useCases.getOwnerByEmail(email)
+        .collect() { response -> _user.value = response }
+    }
   }
 
   fun createUserWithEmailAndPassword() = viewModelScope.launch {
@@ -60,9 +100,21 @@ class AuthViewModel @Inject constructor(application: Application) : ViewModel() 
     auth.createUserWithEmailAndPassword(_userEmail.value, _password.value)
       .addOnCompleteListener { task ->
         if (task.isSuccessful) {
-          // Sign in success, update UI with the signed-in user's information
+          viewModelScope.launch {
+            useCases.addOwner(
+              name.value,
+              userEmail.value,
+              phone.value,
+              address.value,
+              website.value
+            ).collect() {}
+          }          // Sign in success, update UI with the signed-in user's information
           Log.d(TAG, "createUserWithEmail:success")
           val user = auth.currentUser
+          if (user != null) {
+            user.email?.let { getUserByEmail(it) }
+            _user.value.id?.let { Log.d("Logged in", it) }
+          }
           _isLoggedIn.value = true
         } else {
           // If sign in fails, display a message to the user.
@@ -77,14 +129,15 @@ class AuthViewModel @Inject constructor(application: Application) : ViewModel() 
     auth.signInWithEmailAndPassword(_userEmail.value, _password.value)
       .addOnCompleteListener { task ->
         if (task.isSuccessful) {
-          // Sign in success, update UI with the signed-in user's information
           Log.d(TAG, "signInWithEmail:success")
           val user = auth.currentUser
+          if (user != null) {
+            user.email?.let { getUserByEmail(it) }
+            _user.value.id?.let { Log.d("Logged in", it) }
+          }
           _isLoggedIn.value = true
         } else {
-          // If sign in fails, display a message to the user.
-          Log.w(TAG, "createUserWithEmail:failure", task.exception)
-          _error.value = task.exception?.localizedMessage ?: "Ismeretlen hiba!"
+          Log.w(TAG, "signUserWithEmail:failure", task.exception)
         }
       }
   }

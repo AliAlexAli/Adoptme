@@ -4,5 +4,8 @@ data class UseCases (
   val getPets: GetPets,
   val getPet: GetPet,
   val addPet: AddPet,
-  val addImage: AddImage
-  )
+  val addImage: AddImage,
+  val getOwner: GetOwner,
+  val getOwnerByEmail: GetOwnerByEmail,
+  val addOwner: AddOwner
+)

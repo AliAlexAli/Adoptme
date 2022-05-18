@@ -5,6 +5,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import com.example.adoptme.domain.model.Response
 import com.example.adoptme.presentation.AuthViewModel
 import com.example.adoptme.presentation.screens.LoginScreen
 import com.example.adoptme.presentation.screens.MainScreen
@@ -51,6 +52,10 @@ fun petPage(builder: NavGraphBuilder, navController: NavHostController, petsView
     viewModel.setError("")
     LaunchedEffect(Unit) {
       petsViewModel.getPetById(viewModel.petId.value);
+      when(val pet = petsViewModel.data.value){
+        is Response.Success -> pet.data.first().owner?.let { it1 -> petsViewModel.getOwnerById(it1) }
+      }
+
     }
     PetScreen(petsViewModel, viewModel)
   }

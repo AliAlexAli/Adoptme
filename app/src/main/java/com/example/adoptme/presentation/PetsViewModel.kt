@@ -2,11 +2,14 @@ package com.example.adoptme.presentation
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
+import android.webkit.MimeTypeMap
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.adoptme.domain.model.Owner
 import com.example.adoptme.domain.model.Pet
 import com.example.adoptme.domain.model.Response
 import com.example.adoptme.domain.use_case.UseCases
@@ -24,10 +27,11 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
   private val _data = mutableStateOf<Response<ArrayList<Pet>>>(Response.Loading)
   var data: State<Response<ArrayList<Pet>>> = _data
 
+  private val _ownerData = mutableStateOf<Response<Owner>>(Response.Loading)
+  var ownerData: State<Response<Owner>> = _ownerData
+
   val showAddPet = mutableStateOf(false)
   val showSearchDialog = mutableStateOf(false)
-
-  val userId = mutableStateOf<String>("")
 
   fun getPets(sex: String = "", size: String = "") {
     _data.value = Response.Loading
@@ -45,6 +49,16 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
     }
   }
 
+  fun getOwnerById(ownerId: String) {
+    Log.d("ownerId",ownerId)
+    _ownerData.value = Response.Loading
+    viewModelScope.launch {
+      useCases.getOwner(ownerId)
+        .collect() { response -> _ownerData.value = response as Response<Owner> }
+    }
+  }
+
+
   fun addPet(
     name: String?,
     birth: Date?,
@@ -52,12 +66,14 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
     size: String?,
     description: String?,
     image: Uri?,
+    imageExt: String?,
     owner: String?
   ) {
     viewModelScope.launch {
       if (image != null) {
         withContext(Dispatchers.Default) {
-          addImage("id.jpg", image)
+
+          addImage("${UUID.randomUUID()}.$imageExt", image)
         }
       }
 

@@ -3,6 +3,7 @@ package com.example.adoptme.presentation.screens
 import android.app.DatePickerDialog
 import android.content.Context
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import android.widget.DatePicker
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,6 +17,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusManager
@@ -133,7 +135,6 @@ fun AuthTopBar(
 
 @Composable
 fun MainTopBar(
-  currentScreen: NavigationEnum,
   scope: CoroutineScope,
   scaffoldState: ScaffoldState,
   viewModel: PetsViewModel
@@ -226,7 +227,7 @@ fun MainDrawerContent(
 }
 
 @Composable
-fun PetFloatingActionButton(viewModel: PetsViewModel, authViewModel: AuthViewModel) {
+fun PetFloatingActionButton(viewModel: PetsViewModel) {
   FloatingActionButton(
     onClick = {
       viewModel.showAddPet.value = true
@@ -327,21 +328,23 @@ fun SearchDialog(viewModel: PetsViewModel) {
 }
 
 @Composable
-fun AddPetDialog(viewModel: PetsViewModel) {
-  var name by remember { mutableStateOf("") }
-  var birth = remember { mutableStateOf(Calendar.getInstance().time) }
-  var sex by remember { mutableStateOf("") }
-  var size by remember { mutableStateOf("") }
-  var description by remember { mutableStateOf("") }
-  var image = remember { mutableStateOf(Uri.EMPTY) }
-  val focusRequester = FocusRequester()
-
+fun AddPetDialog(viewModel: PetsViewModel, authViewModel: AuthViewModel) {
+  var name by rememberSaveable { mutableStateOf("") }
+  var birth = rememberSaveable { mutableStateOf(Calendar.getInstance().time) }
+  var sex by rememberSaveable { mutableStateOf("") }
+  var size by rememberSaveable { mutableStateOf("") }
+  var description by rememberSaveable { mutableStateOf("") }
+  var image = rememberSaveable { mutableStateOf(Uri.EMPTY) }
+  var imageExt = rememberSaveable { mutableStateOf("") }
+  val focusRequester = remember { FocusRequester() }
   AlertDialog(
     onDismissRequest = {
       viewModel.showAddPet.value = false
     },
     text = {
-      Column {
+      Column(
+        modifier = Modifier.verticalScroll(rememberScrollState())
+      ) {
         OutlinedTextField(
           value = name,
           onValueChange = { name = it },
@@ -425,17 +428,15 @@ fun AddPetDialog(viewModel: PetsViewModel) {
           },
           modifier = Modifier
             .focusRequester(focusRequester)
-            .verticalScroll(rememberScrollState())
         )
         Spacer(
           modifier = Modifier.height(16.dp)
         )
-        ImagePicker(context = context, filePath = image)
+        ImagePicker(context = context, filePath = image, extension = imageExt)
         Spacer(
           modifier = Modifier.height(16.dp)
         )
         DisposableEffect(Unit) {
-          focusRequester.requestFocus()
           onDispose { }
         }
       }
@@ -451,7 +452,8 @@ fun AddPetDialog(viewModel: PetsViewModel) {
             size,
             description,
             image.value,
-            viewModel.userId.value
+            imageExt.value,
+            authViewModel.user.value.id
           )
         }
       ) {
@@ -513,7 +515,7 @@ fun showDatePicker(context: Context, date: MutableState<Date>) {
 }
 
 @Composable
-fun ImagePicker(context: Context, filePath: MutableState<Uri>) {
+fun ImagePicker(context: Context, filePath: MutableState<Uri>, extension: MutableState<String>) {
 
   val launcher = rememberLauncherForActivityResult(
     contract =
@@ -521,6 +523,7 @@ fun ImagePicker(context: Context, filePath: MutableState<Uri>) {
   ) {
     if (it != null) {
       filePath.value = it
+      extension.value = MimeTypeMap.getSingleton().getExtensionFromMimeType(context.contentResolver.getType(filePath.value))!!
     }
   }
   Button(onClick = {

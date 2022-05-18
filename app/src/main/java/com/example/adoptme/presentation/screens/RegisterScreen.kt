@@ -3,13 +3,18 @@ package com.example.adoptme.presentation.screens
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -64,13 +69,67 @@ fun RegScreen(navController: NavController, viewModel: AuthViewModel) {
       modifier = Modifier
         .fillMaxSize()
         .background(MaterialTheme.colors.background),
-      verticalArrangement = Arrangement.Center,
+      verticalArrangement = Arrangement.SpaceEvenly,
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       EmailField(focusManager, viewModel)
-      Spacer(modifier = Modifier.height(30.dp))
       PasswordField(focusManager, viewModel)
-      Spacer(modifier = Modifier.height(30.dp))
+      OutlinedTextField(
+        value = viewModel.name.value,
+        label = { Text(text = "Név") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(
+          keyboardType = KeyboardType.Text,
+          imeAction = ImeAction.Next
+        ),
+        keyboardActions = KeyboardActions(
+          onNext = {
+            focusManager.moveFocus(FocusDirection.Down)
+          }),
+        onValueChange = { viewModel.setName(it) }
+      )
+      OutlinedTextField(
+        value = viewModel.phone.value,
+        label = { Text(text = "Telefonszám") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(
+          keyboardType = KeyboardType.Phone,
+          imeAction = ImeAction.Next
+        ),
+        keyboardActions = KeyboardActions(
+          onNext = {
+            focusManager.moveFocus(FocusDirection.Down)
+          }),
+        onValueChange = { viewModel.setPhone(it) }
+      )
+      OutlinedTextField(
+        value = viewModel.address.value,
+        label = { Text(text = "Cím") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(
+          keyboardType = KeyboardType.Text,
+          imeAction = ImeAction.Next
+        ),
+        keyboardActions = KeyboardActions(
+          onNext = {
+            focusManager.moveFocus(FocusDirection.Down)
+          }),
+        onValueChange = { viewModel.setAddress(it) }
+      )
+      OutlinedTextField(
+        value = viewModel.website.value,
+        label = { Text(text = "Weboldal") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(
+          keyboardType = KeyboardType.Text,
+          imeAction = ImeAction.Next
+        ),
+        keyboardActions = KeyboardActions(
+          onNext = {
+            focusManager.moveFocus(FocusDirection.Down)
+          }),
+        onValueChange = { viewModel.setWebsite(it) }
+      )
       ButtonEmailPasswordCreate(viewModel)
     }
   }
