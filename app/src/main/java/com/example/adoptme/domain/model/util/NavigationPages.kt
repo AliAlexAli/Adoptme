@@ -1,17 +1,12 @@
 package com.example.adoptme.domain.model.util
 
 import androidx.compose.runtime.LaunchedEffect
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import com.example.adoptme.domain.model.Response
 import com.example.adoptme.presentation.AuthViewModel
-import com.example.adoptme.presentation.screens.LoginScreen
-import com.example.adoptme.presentation.screens.MainScreen
-import com.example.adoptme.presentation.screens.PetScreen
-import com.example.adoptme.presentation.screens.RegScreen
 import com.example.adoptme.presentation.PetsViewModel
+import com.example.adoptme.presentation.screens.*
 
 fun loginPage(
   builder: NavGraphBuilder,
@@ -20,7 +15,8 @@ fun loginPage(
 ) {
   builder.composable(route = NavigationEnum.Login.name) {
     loginViewModel.setError("")
-    LoginScreen(navController,
+    LoginScreen(
+      navController,
       viewModel = loginViewModel
     )
   }
@@ -29,34 +25,54 @@ fun loginPage(
 fun registerPage(
   builder: NavGraphBuilder,
   navController: NavHostController,
-  loginViewModel: AuthViewModel
+  authViewModel: AuthViewModel,
+  petsViewModel: PetsViewModel
 ) {
   builder.composable(route = NavigationEnum.Register.name) {
-    loginViewModel.setError("")
-    RegScreen(navController, loginViewModel)
+    authViewModel.setError("")
+    RegScreen(navController, authViewModel, petsViewModel)
   }
 }
 
-fun mainPage(builder: NavGraphBuilder, navController: NavHostController, petsViewModel: PetsViewModel, loginViewModel: AuthViewModel) {
+fun myDataPage(
+  builder: NavGraphBuilder,
+  navController: NavHostController,
+  authViewModel: AuthViewModel,
+  petsViewModel: PetsViewModel
+) {
+  builder.composable(route = NavigationEnum.MyData.name) {
+    authViewModel.setError("")
+    MyDataScreen(navController, authViewModel, petsViewModel)
+  }
+}
+
+fun mainPage(
+  builder: NavGraphBuilder,
+  navController: NavHostController,
+  petsViewModel: PetsViewModel,
+  loginViewModel: AuthViewModel
+) {
   builder.composable(route = NavigationEnum.Main.name) {
     loginViewModel.setError("")
     LaunchedEffect(Unit) {
       petsViewModel.getPets()
     }
-    MainScreen(navController,petsViewModel, loginViewModel)
+    MainScreen(navController, petsViewModel, loginViewModel)
   }
 }
 
-fun petPage(builder: NavGraphBuilder, navController: NavHostController, petsViewModel: PetsViewModel, viewModel: AuthViewModel) {
+fun petPage(
+  builder: NavGraphBuilder,
+  navController: NavHostController,
+  petsViewModel: PetsViewModel,
+  viewModel: AuthViewModel
+) {
   builder.composable(route = NavigationEnum.Pet.name) {
     viewModel.setError("")
     LaunchedEffect(Unit) {
-      petsViewModel.getPetById(viewModel.petId.value);
-      when(val pet = petsViewModel.data.value){
-        is Response.Success -> pet.data.first().owner?.let { it1 -> petsViewModel.getOwnerById(it1) }
-      }
-
+      petsViewModel.getPetById(viewModel.petId.value)
+      petsViewModel.setOwner()
     }
-    PetScreen(petsViewModel, viewModel)
+    PetScreen(petsViewModel, viewModel, navController)
   }
 }

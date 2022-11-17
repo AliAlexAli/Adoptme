@@ -15,6 +15,9 @@ enum class NavigationEnum(val title: Int) {
   ),
   Pet(
     title = R.string.pet
+  ),
+  MyData(
+  title = R.string.myData
   );
 
   companion object {
@@ -24,6 +27,7 @@ enum class NavigationEnum(val title: Int) {
         Login.name -> Main
         Register.name -> Main
         Pet.name -> Pet
+        MyData.name -> {if(isLoggedIn.value) MyData else Main}
         null -> Main
         else -> throw IllegalArgumentException("Route $route is not recognized.")
       }

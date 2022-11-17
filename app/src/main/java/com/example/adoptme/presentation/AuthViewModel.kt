@@ -88,10 +88,15 @@ class AuthViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
   }
 
   fun getUserByEmail(email: String) {
+    Log.d("getUserByEmail", email)
     _user.value = Owner()
     viewModelScope.launch {
       useCases.getOwnerByEmail(email)
-        .collect() { response -> _user.value = response }
+        .collect() { response -> _user.value = response; response.id?.let {
+          Log.d("getUserResponse",
+            it
+          )
+        } }
     }
   }
 
@@ -124,6 +129,22 @@ class AuthViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
       }
   }
 
+  fun updateUser() = viewModelScope.launch {
+
+    viewModelScope.launch {
+      useCases.addOwner(
+        name.value,
+        userEmail.value,
+        phone.value,
+        address.value,
+        website.value,
+        user.value.id
+      ).collect() {}
+    }
+    Log.d(TAG, "updateUser:success")
+  }
+
+
   fun signInWithEmailAndPassword() = viewModelScope.launch {
 
     auth.signInWithEmailAndPassword(_userEmail.value, _password.value)
@@ -137,6 +158,7 @@ class AuthViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
           }
           _isLoggedIn.value = true
         } else {
+          _error.value = task.exception?.message.toString()
           Log.w(TAG, "signUserWithEmail:failure", task.exception)
         }
       }

@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.adoptme.domain.model.util.NavigationEnum
 import com.example.adoptme.presentation.AuthViewModel
+import com.example.adoptme.presentation.screens.components.*
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")

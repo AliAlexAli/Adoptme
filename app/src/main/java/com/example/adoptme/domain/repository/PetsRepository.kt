@@ -1,35 +1,32 @@
 package com.example.adoptme.domain.repository
 
 import android.net.Uri
-import com.example.adoptme.domain.model.Owner
+import com.example.adoptme.domain.model.Pet
 import com.example.adoptme.domain.model.Response
+import com.example.adoptme.domain.model.enums.Sex
+import com.example.adoptme.domain.model.enums.Size
 import kotlinx.coroutines.flow.Flow
 import java.util.*
+import kotlin.collections.ArrayList
 
 interface PetsRepository {
 
-  suspend fun getPetsFromFirestore(sex: String = "", size: String = ""): Flow<Response<Void?>>
+  suspend fun getPetsFromFirestore(sex: MutableList<Sex>, size: MutableList<Size>, owner: String?): Flow<Response<ArrayList<Pet>>>
 
-  suspend fun getPetFromFirestore(id: String): Flow<Response<Void?>>
+  suspend fun getPetFromFirestore(id: String): Flow<Response<ArrayList<Pet>>>
 
-  suspend fun addPetToFirestore(
+  suspend fun deletePetFromFirestore(id: String): Flow<Response<Unit>>
+
+    suspend fun addPetToFirestore(
+    id: String?,
     name: String?,
     birth: Date?,
-    sex: String?,
-    size: String?,
+    sex: Sex?,
+    size: Size?,
     description: String?,
     image: String?,
     owner: String?
   ): Flow<Response<Void?>>
 
   suspend fun addImageToStorage(fileName: String, file: Uri): Flow<Response<Void?>>
-  suspend fun getOwnerFromFirestore(id: String): Flow<Response<Void?>>
-  suspend fun getOwnerFromFirestoreByEmail(email: String): Flow<Owner>
-  suspend fun addOwnerToFirestore(
-    name: String?,
-    email: String?,
-    phone: String?,
-    address: String?,
-    website: String?
-  ): Flow<Response<Void?>>
 }

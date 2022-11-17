@@ -13,46 +13,50 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.adoptme.R
 import com.example.adoptme.domain.model.util.NavigationEnum
 import com.example.adoptme.presentation.AuthViewModel
+import com.example.adoptme.presentation.PetsViewModel
+import com.example.adoptme.presentation.screens.components.*
 import kotlinx.coroutines.launch
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun RegScreen(navController: NavController, viewModel: AuthViewModel) {
+fun RegScreen(navController: NavController, authViewModel: AuthViewModel, petsViewModel: PetsViewModel) {
   val focusManager = LocalFocusManager.current
   val backstackEntry = navController.currentBackStackEntryAsState()
 
   val scaffoldState = rememberScaffoldState()
   val scope = rememberCoroutineScope()
   val currentScreen =
-    NavigationEnum.fromRoute(backstackEntry.value?.destination?.route, viewModel.isLoggedIn)
+    NavigationEnum.fromRoute(backstackEntry.value?.destination?.route, authViewModel.isLoggedIn)
 
-  if(viewModel.isLoggedIn.value) LaunchedEffect(Unit){ navController.navigate(NavigationEnum.Main.name)}
+  if(authViewModel.isLoggedIn.value) LaunchedEffect(Unit){ navController.navigate(NavigationEnum.Main.name)}
 
-  if (viewModel.error.value.isNotBlank()) scope.launch {
+  if (authViewModel.error.value.isNotBlank()) scope.launch {
     scaffoldState.snackbarHostState.showSnackbar(
-      viewModel.error.value
+      authViewModel.error.value
     )
   }
 
   Scaffold(
     scaffoldState = scaffoldState,
     topBar = {
-        AuthTopBar(currentScreen, scope, scaffoldState)
+      AuthTopBar(currentScreen, scope, scaffoldState)
     },
     drawerContent = {
-      if (viewModel.isLoggedIn.value) {
+      if (authViewModel.isLoggedIn.value) {
         MainDrawerContent(
-          navController = navController,
-          scope = scope,
-          scaffoldState = scaffoldState,
-          viewModel = viewModel
+          navController,
+          scope,
+          scaffoldState,
+          authViewModel,
+          petsViewModel
         )
 
       } else {
@@ -72,11 +76,11 @@ fun RegScreen(navController: NavController, viewModel: AuthViewModel) {
       verticalArrangement = Arrangement.SpaceEvenly,
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      EmailField(focusManager, viewModel)
-      PasswordField(focusManager, viewModel)
+      EmailField(focusManager, authViewModel)
+      PasswordField(focusManager, authViewModel)
       OutlinedTextField(
-        value = viewModel.name.value,
-        label = { Text(text = "Név") },
+        value = authViewModel.name.value,
+        label = { Text(text = stringResource(R.string.ownerName)) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(
           keyboardType = KeyboardType.Text,
@@ -86,11 +90,11 @@ fun RegScreen(navController: NavController, viewModel: AuthViewModel) {
           onNext = {
             focusManager.moveFocus(FocusDirection.Down)
           }),
-        onValueChange = { viewModel.setName(it) }
+        onValueChange = { authViewModel.setName(it) }
       )
       OutlinedTextField(
-        value = viewModel.phone.value,
-        label = { Text(text = "Telefonszám") },
+        value = authViewModel.phone.value,
+        label = { Text(text = stringResource(R.string.ownerPhone)) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(
           keyboardType = KeyboardType.Phone,
@@ -100,11 +104,11 @@ fun RegScreen(navController: NavController, viewModel: AuthViewModel) {
           onNext = {
             focusManager.moveFocus(FocusDirection.Down)
           }),
-        onValueChange = { viewModel.setPhone(it) }
+        onValueChange = { authViewModel.setPhone(it) }
       )
       OutlinedTextField(
-        value = viewModel.address.value,
-        label = { Text(text = "Cím") },
+        value = authViewModel.address.value,
+        label = { Text(text = stringResource(R.string.ownerAddress)) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(
           keyboardType = KeyboardType.Text,
@@ -114,11 +118,11 @@ fun RegScreen(navController: NavController, viewModel: AuthViewModel) {
           onNext = {
             focusManager.moveFocus(FocusDirection.Down)
           }),
-        onValueChange = { viewModel.setAddress(it) }
+        onValueChange = { authViewModel.setAddress(it) }
       )
       OutlinedTextField(
-        value = viewModel.website.value,
-        label = { Text(text = "Weboldal") },
+        value = authViewModel.website.value,
+        label = { Text(text = stringResource(R.string.ownerSite)) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(
           keyboardType = KeyboardType.Text,
@@ -128,10 +132,9 @@ fun RegScreen(navController: NavController, viewModel: AuthViewModel) {
           onNext = {
             focusManager.moveFocus(FocusDirection.Down)
           }),
-        onValueChange = { viewModel.setWebsite(it) }
+        onValueChange = { authViewModel.setWebsite(it) }
       )
-      ButtonEmailPasswordCreate(viewModel)
+      SubmitRegisterButton(authViewModel)
     }
   }
 }
-

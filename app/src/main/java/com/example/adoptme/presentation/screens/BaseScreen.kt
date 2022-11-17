@@ -1,7 +1,8 @@
 package com.example.adoptme.presentation.screens
 
-import android.annotation.SuppressLint
+import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -13,21 +14,29 @@ import com.example.adoptme.presentation.PetsViewModel
 @Composable
 fun NavigateBetweenScreen(
   navController: NavHostController,
-  loginViewModel: AuthViewModel = hiltViewModel()
+  petId: String?,
+  authViewModel: AuthViewModel = hiltViewModel()
 ) {
-  val startDestination = NavigationEnum.Main.name
+  var startDestination =
+    if (petId.isNullOrEmpty()) NavigationEnum.Main.name else NavigationEnum.Pet.name
   val petsViewModel: PetsViewModel = hiltViewModel()
+  if (!petId.isNullOrEmpty()) {
+    authViewModel.setpetId(petId)
+  }
 
   NavHost(navController = navController, startDestination = startDestination) {
-    loginPage(this, navController, loginViewModel)
-    registerPage(this, navController, loginViewModel)
-    mainPage(this, navController, petsViewModel, loginViewModel)
-    petPage(this, navController, petsViewModel, loginViewModel)
+    loginPage(this, navController, authViewModel)
+    registerPage(this, navController, authViewModel, petsViewModel)
+    mainPage(this, navController, petsViewModel, authViewModel)
+    petPage(this, navController, petsViewModel, authViewModel)
+    myDataPage(this, navController, authViewModel, petsViewModel)
   }
 }
 
+val Context.notificationStore by preferencesDataStore("notification")
+
 @Composable
-fun BaseScreen(viewModel: AuthViewModel = hiltViewModel()) {
+fun BaseScreen(petId: String? = null) {
   val navController = rememberNavController()
-  NavigateBetweenScreen(navController)
+  NavigateBetweenScreen(navController, petId)
 }

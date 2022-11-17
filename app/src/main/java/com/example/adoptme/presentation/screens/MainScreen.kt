@@ -1,6 +1,8 @@
 package com.example.adoptme.presentation.screens
 
 import android.annotation.SuppressLint
+import android.content.res.Resources
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -27,17 +31,17 @@ import com.example.adoptme.domain.model.Response
 import com.example.adoptme.domain.model.util.NavigationEnum
 import com.example.adoptme.presentation.AuthViewModel
 import com.example.adoptme.presentation.PetsViewModel
+import com.example.adoptme.presentation.screens.components.*
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.launch
 
-
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun MainScreen(
   navController: NavController,
-  viewModel: PetsViewModel,
+  petsViewModel: PetsViewModel,
   authViewModel: AuthViewModel
 ) {
   val backstackEntry = navController.currentBackStackEntryAsState()
@@ -53,7 +57,7 @@ fun MainScreen(
     )
   }
 
-  when (val petsResponse = viewModel.data.value) {
+  when (val petsResponse = petsViewModel.data.value) {
     is Response.Error -> scope.launch {
       scaffoldState.snackbarHostState.showSnackbar(
         petsResponse.message
@@ -64,15 +68,16 @@ fun MainScreen(
   Scaffold(
     scaffoldState = scaffoldState,
     topBar = {
-      MainTopBar(scope, scaffoldState, viewModel)
+      MainTopBar(scope, scaffoldState, petsViewModel)
     },
     drawerContent = {
       if (authViewModel.isLoggedIn.value) {
         MainDrawerContent(
-          navController = navController,
-          scope = scope,
-          scaffoldState = scaffoldState,
-          viewModel = authViewModel
+          navController,
+          scope,
+          scaffoldState,
+          authViewModel,
+          petsViewModel
         )
 
       } else {
@@ -85,11 +90,11 @@ fun MainScreen(
     },
     floatingActionButton = {
       if (authViewModel.isLoggedIn.value) {
-        PetFloatingActionButton(viewModel)
+        AddPetFab(petsViewModel)
       }
     }
   ) {
-    PetsList(navController, viewModel = viewModel, authViewModel)
+    PetsList(navController, viewModel = petsViewModel, authViewModel)
   }
 }
 
@@ -107,7 +112,11 @@ fun PetsList(navController: NavController, viewModel: PetsViewModel, authViewMod
         modifier = Modifier.fillMaxSize(),
         state = rememberSwipeRefreshState(isRefreshing = false),
         onRefresh = { viewModel.getPets() }) {
-        LazyColumn(Modifier.padding(all = 10.dp)) {
+        if (petsResponse.data.isEmpty())
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = stringResource(R.string.not_found))
+          }
+        else LazyColumn(Modifier.padding(all = 10.dp)) {
           items(items = petsResponse.data) { pet ->
             PetCard(
               pet = pet,
@@ -119,7 +128,9 @@ fun PetsList(navController: NavController, viewModel: PetsViewModel, authViewMod
         }
       }
       if (viewModel.showAddPet.value) {
-        AddPetDialog(viewModel = viewModel, authViewModel = authViewModel)
+        AddPetDialog(viewModel = viewModel, authViewModel = authViewModel, onAdd = {
+          navController.navigate(NavigationEnum.Main.name)
+        })
       }
       if (viewModel.showSearchDialog.value) {
         SearchDialog(viewModel = viewModel)
@@ -146,7 +157,7 @@ fun PetCard(
   Card(
     modifier = Modifier
       .padding(all = 10.dp)
-      .height(280.dp),
+      .height(280.dp).testTag(stringResource(R.string.test_pet_card)),
     elevation = 3.dp,
     shape = RoundedCornerShape(10)
   ) {
@@ -177,7 +188,7 @@ fun PetCard(
         }
 
         pet.sex?.let { sex ->
-          Text(text = sex, color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f))
+          Text(text = sex.value, color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f))
 
           pet.description?.let { desc ->
             Text(
