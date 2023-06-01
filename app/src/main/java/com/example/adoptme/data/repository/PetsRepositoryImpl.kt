@@ -24,126 +24,131 @@ import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
 class PetsRepositoryImpl @Inject constructor(
-  private val petsRef: CollectionReference,
-  private val petsQuery: Query,
-  private val storageRef: StorageReference,
-  private val firebaseMessaging: FirebaseMessaging
-  ) : PetsRepository {
-  override suspend fun getPetsFromFirestore(
-    sex: MutableList<Sex>,
-    size: MutableList<Size>,
-    owner: String?
-  ): Flow<Response<ArrayList<Pet>>> = callbackFlow {
-    var query = petsQuery
-    if (owner != null) query = query.whereEqualTo("owner", owner)
-    size.map { it.value }.forEach({Log.d("sizee", it)})
-    fun sexFilter(value: String?) = sex.isEmpty() || sex.map { it.value }.contains(value)
-    fun sizeFilter(value: String?) = size.isEmpty() || size.map { it.value }.contains(value)
+    private val petsRef: CollectionReference,
+    private val petsQuery: Query,
+    private val storageRef: StorageReference,
+) : PetsRepository {
+    override suspend fun getPetsFromFirestore(
+        sex: MutableList<Sex>,
+        size: MutableList<Size>,
+        owner: String?,
+        favorite: Boolean,
+        favoriteIds: MutableList<String>
+    ): Flow<Response<ArrayList<Pet>>> = callbackFlow {
+        var query = petsQuery
+        if (owner != null) query = query.whereEqualTo("owner", owner)
+        size.map { it.value }.forEach { Log.d("size", it) }
+        fun sexFilter(value: String?) = sex.isEmpty() || sex.map { it.value }.contains(value)
+        fun sizeFilter(value: String?) = size.isEmpty() || size.map { it.value }.contains(value)
 
-    FirebaseMessaging.getInstance().subscribeToTopic("Global")
+        FirebaseMessaging.getInstance().subscribeToTopic("Global")
 
-    val snapshotListener = query
-      .addSnapshotListener { snapshot, e ->
-        val response = if (snapshot != null) {
-          val pets: MutableList<Pet> = ArrayList()
-          snapshot.documents.filter { snapshot ->
-            sexFilter(snapshot.getString(Pet.sex)) && sizeFilter(
-              snapshot.getString(Pet.size)
-            )
-          }.forEach(action = { documentSnapshot -> pets.add(firebaseObjToPet(documentSnapshot)) })
-          Response.Success(pets)
-        } else {
-          Response.Error(e?.message ?: e.toString())
+        val snapshotListener = query
+            .addSnapshotListener { snapshot, e ->
+                val response = if (snapshot != null) {
+                    val pets: MutableList<Pet> = ArrayList()
+                    snapshot.documents.filter { snapshot ->
+                        sexFilter(snapshot.getString(Pet.sex)) && sizeFilter(
+                            snapshot.getString(Pet.size)
+                        )
+                    }.forEach(action = { documentSnapshot ->
+                        val pet = firebaseObjToPet(documentSnapshot)
+                        if (!favorite || favoriteIds.contains(pet.id))
+                            pets.add(pet)
+                    })
+                    Response.Success(pets)
+                } else {
+                    Response.Error(e?.message ?: e.toString())
+                }
+                trySend(response)
+            }
+        awaitClose {
+            snapshotListener.remove()
         }
-        trySend(response)
-      }
-    awaitClose {
-      snapshotListener.remove()
-    }
-  } as Flow<Response<ArrayList<Pet>>>
-
-  override suspend fun getPetFromFirestore(id: String) =
-    callbackFlow {
-      val snapshotListener = petsQuery.whereEqualTo("id", id).addSnapshotListener { snapshot, e ->
-        Log.d("GetPet", id)
-        val response = if (snapshot != null) {
-          val pets: MutableList<Pet> = ArrayList()
-          snapshot.documents.forEach(action = { documentSnapshot ->
-            pets.add(
-              firebaseObjToPet(
-                documentSnapshot
-              )
-            )
-          })
-          Response.Success(pets)
-        } else {
-          Response.Error(e?.message ?: e.toString())
-        }
-        trySend(response)
-      }
-      awaitClose {
-        snapshotListener.remove()
-      }
     } as Flow<Response<ArrayList<Pet>>>
 
-  override suspend fun deletePetFromFirestore(id: String) = callbackFlow {
-    var response: Response<Unit> = Response.Loading
-    val delete = async {
-      petsRef.document(id).delete()
-        .addOnSuccessListener {
-          Log.d("deletePet", "winner")
-          response = Response.Success(Unit)
+    override suspend fun getPetFromFirestore(id: String) =
+        callbackFlow {
+            val snapshotListener =
+                petsQuery.whereEqualTo("id", id).addSnapshotListener { snapshot, e ->
+                    Log.d("GetPet", id)
+                    val response = if (snapshot != null) {
+                        val pets: MutableList<Pet> = ArrayList()
+                        snapshot.documents.forEach(action = { documentSnapshot ->
+                            pets.add(
+                                firebaseObjToPet(
+                                    documentSnapshot
+                                )
+                            )
+                        })
+                        Response.Success(pets)
+                    } else {
+                        Response.Error(e?.message ?: e.toString())
+                    }
+                    trySend(response)
+                }
+            awaitClose {
+                snapshotListener.remove()
+            }
+        } as Flow<Response<ArrayList<Pet>>>
+
+    override suspend fun deletePetFromFirestore(id: String) = callbackFlow {
+        var response: Response<Unit> = Response.Loading
+        val delete = async {
+            petsRef.document(id).delete()
+                .addOnSuccessListener {
+                    Log.d("deletePet", "winner")
+                    response = Response.Success(Unit)
+                }
+                .addOnFailureListener { e ->
+                    response = Response.Error(e.message ?: e.toString())
+                }
         }
-        .addOnFailureListener { e ->
-          response = Response.Error(e.message ?: e.toString())
+        delete.await()
+        trySend(response)
+        awaitClose {}
+    }
+
+    override suspend fun addPetToFirestore(
+        id: String?,
+        name: String?,
+        birth: Date?,
+        sex: Sex?,
+        size: Size?,
+        description: String?,
+        image: String?,
+        owner: String?
+    ) = flow {
+        try {
+            emit(Response.Loading)
+            val petId = id ?: petsRef.document().id
+            val pet = Pet(petId, name, birth, sex, size, description, image, owner)
+            val addition = petsRef.document(petId).set(petToFirebaseObj(pet)).await()
+            emit(Response.Success(addition))
+        } catch (e: Exception) {
+            emit(Response.Error(e.message ?: e.toString()))
         }
-    }
-    delete.await()
-    trySend(response)
-    awaitClose {}
-  }
+    } as Flow<Response<Void?>>
 
-  override suspend fun addPetToFirestore(
-    id: String?,
-    name: String?,
-    birth: Date?,
-    sex: Sex?,
-    size: Size?,
-    description: String?,
-    image: String?,
-    owner: String?
-  ) = flow {
-    try {
-      emit(Response.Loading)
-      val petId = id ?: petsRef.document().id
-      val pet = Pet(petId, name, birth, sex, size, description, image, owner)
-      val addition = petsRef.document(petId).set(petToFirebaseObj(pet)).await()
-      emit(Response.Success(addition))
-    } catch (e: Exception) {
-      emit(Response.Error(e.message ?: e.toString()))
-    }
-  } as Flow<Response<Void?>>
+    override suspend fun addImageToStorage(fileName: String, file: Uri) = flow {
+        try {
+            var response = Constants.PLACEHOLDER_IMG
+            emit(Response.Loading)
+            storageRef.child(fileName).putFile(file).continueWithTask { task ->
+                if (!task.isSuccessful) task.exception?.let {
+                    throw it
+                }
+                storageRef.child(fileName).downloadUrl
+            }.addOnCompleteListener { task ->
+                response = task.result.toString()
+            }.await()
 
-  override suspend fun addImageToStorage(fileName: String, file: Uri) = flow {
-    try {
-      var response = Constants.PLACEHOLDER_IMG
-      emit(Response.Loading)
-      storageRef.child(fileName).putFile(file).continueWithTask { task ->
-        if (!task.isSuccessful) task.exception?.let {
-          throw it
+            emit(Response.Success(response))
+
+        } catch (e: Exception) {
+            emit(Error(e.message ?: e.toString()))
         }
-        storageRef.child(fileName).downloadUrl
-      }.addOnCompleteListener { task ->
-        response = task.result.toString()
-      }.await()
-
-      emit(Response.Success(response))
-
-    } catch (e: Exception) {
-      emit(Error(e.message ?: e.toString()))
-    }
-  } as Flow<Response<Void?>>
+    } as Flow<Response<Void?>>
 }

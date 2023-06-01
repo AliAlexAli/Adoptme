@@ -1,6 +1,5 @@
 package com.example.adoptme.presentation.screens.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -14,44 +13,44 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
 class MultiFabItem(
-  val icon: ImageVector,
-  val label: String,
-  val onClick: () -> Unit,
-  val color: Color
+    val icon: ImageVector,
+    val label: String,
+    val onClick: () -> Unit,
+    val color: Color
 )
 
 @Composable
 fun MultiFab(
-  fabIcon: ImageVector,
-  items: List<MultiFabItem>,
-  isOpen: Boolean,
-  stateChanged: (isOpen: Boolean) -> Unit,
+    fabIcon: ImageVector,
+    items: List<MultiFabItem>,
+    isOpen: Boolean,
+    stateChanged: (isOpen: Boolean) -> Unit,
 ) {
-  Column(horizontalAlignment = Alignment.End) {
-    if (isOpen) {
-      items.forEach { item ->
-        FloatingActionButton(
-          onClick = {
-            item.onClick()
-            stateChanged(false)
-          },
-          modifier = Modifier.background(item.color)
-        ) {
-          Icon(
-            imageVector = item.icon,
-            contentDescription = item.label
-          )
+    Column(horizontalAlignment = Alignment.End) {
+        if (isOpen) {
+            items.forEach { item ->
+                FloatingActionButton(
+                    onClick = {
+                        item.onClick()
+                        stateChanged(false)
+                    },
+                    backgroundColor = item.color
+                ) {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = item.label
+                    )
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
-        Spacer(modifier = Modifier.height(20.dp))
-      }
+        FloatingActionButton(onClick = {
+            stateChanged(!isOpen)
+        }) {
+            Icon(
+                imageVector = fabIcon,
+                contentDescription = "openFab",
+            )
+        }
     }
-    FloatingActionButton(onClick = {
-      stateChanged(!isOpen)
-    }) {
-      Icon(
-        imageVector = fabIcon,
-        contentDescription = "",
-      )
-    }
-  }
 }

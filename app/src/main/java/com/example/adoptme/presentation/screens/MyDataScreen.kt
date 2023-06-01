@@ -17,7 +17,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.adoptme.R
 import com.example.adoptme.domain.model.util.NavigationEnum
 import com.example.adoptme.presentation.AuthViewModel
@@ -32,12 +31,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun MyDataScreen(navController: NavController, authViewModel: AuthViewModel, petsViewModel: PetsViewModel) {
   val focusManager = LocalFocusManager.current
-  val backstackEntry = navController.currentBackStackEntryAsState()
 
   val scaffoldState = rememberScaffoldState()
   val scope = rememberCoroutineScope()
-  val currentScreen =
-    NavigationEnum.fromRoute(backstackEntry.value?.destination?.route, authViewModel.isLoggedIn)
 
   if(!authViewModel.isLoggedIn.value) LaunchedEffect(Unit){ navController.navigate(NavigationEnum.Main.name)}
 

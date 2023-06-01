@@ -1,8 +1,6 @@
 package com.example.adoptme.presentation.screens
 
 import android.annotation.SuppressLint
-import android.content.res.Resources
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,12 +41,8 @@ fun MainScreen(
   petsViewModel: PetsViewModel,
   authViewModel: AuthViewModel
 ) {
-  val backstackEntry = navController.currentBackStackEntryAsState()
-
   val scaffoldState = rememberScaffoldState()
   val scope = rememberCoroutineScope()
-  val currentScreen =
-    NavigationEnum.fromRoute(backstackEntry.value?.destination?.route, authViewModel.isLoggedIn)
 
   if (authViewModel.error.value.isNotBlank()) scope.launch {
     scaffoldState.snackbarHostState.showSnackbar(
@@ -68,7 +61,7 @@ fun MainScreen(
   Scaffold(
     scaffoldState = scaffoldState,
     topBar = {
-      MainTopBar(scope, scaffoldState, petsViewModel)
+      MainTopBar(scope, scaffoldState, petsViewModel, true)
     },
     drawerContent = {
       if (authViewModel.isLoggedIn.value) {
@@ -206,7 +199,7 @@ fun PetCard(
                 .clip(RoundedCornerShape(20))
                 .background(MaterialTheme.colors.primary),
               onClick = {
-                authViewModel.setpetId(id)
+                authViewModel.setPetId(id)
                 navController.navigate(NavigationEnum.Pet.name)
 
               }) {

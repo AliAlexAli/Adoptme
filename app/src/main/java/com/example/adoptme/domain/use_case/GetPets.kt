@@ -5,5 +5,5 @@ import com.example.adoptme.domain.model.enums.Size
 import com.example.adoptme.domain.repository.PetsRepository
 
 class GetPets(private val repository: PetsRepository) {
-  suspend operator fun invoke(sex: MutableList<Sex>, size: MutableList<Size>, owner: String?) = repository.getPetsFromFirestore(sex, size, owner)
+  suspend operator fun invoke(sex: MutableList<Sex>, size: MutableList<Size>, owner: String?, favorite: Boolean, favoriteList: ArrayList<String>) = repository.getPetsFromFirestore(sex, size, owner, favorite, favoriteList)
 }

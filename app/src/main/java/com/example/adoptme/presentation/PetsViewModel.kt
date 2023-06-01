@@ -18,12 +18,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
 import javax.inject.Inject
-import kotlin.collections.ArrayList
 
 class Filter {
   var sex: MutableList<Sex> = ArrayList()
   var size: MutableList<Size> = ArrayList()
   var owner: String? = null
+  var favorite: Boolean = false
 }
 
 @HiltViewModel
@@ -31,6 +31,10 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
 
   private val _data = mutableStateOf<Response<ArrayList<Pet>>>(Response.Loading)
   var data: State<Response<ArrayList<Pet>>> = _data
+
+  private val _favoriteList = mutableStateOf(ArrayList<String>())
+  var favoriteList: State<ArrayList<String>> = _favoriteList
+
 
   private val _ownerData = mutableStateOf(Owner())
   var ownerData: State<Owner> = _ownerData
@@ -57,10 +61,14 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
     _filter.value.owner = owner
   }
 
+  fun toggleFavoriteFilter() {
+    _filter.value.favorite = !_filter.value.favorite
+  }
+
   fun getPets() {
     _data.value = Response.Loading
     viewModelScope.launch {
-      useCases.getPets(filter.value.sex, filter.value.size, filter.value.owner)
+      useCases.getPets(filter.value.sex, filter.value.size, filter.value.owner, filter.value.favorite, favoriteList.value)
         .collect { response -> _data.value = response }
     }
   }
@@ -68,6 +76,7 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
   fun clearFilters() {
     _filter.value.sex.clear()
     _filter.value.size.clear()
+    _filter.value.favorite = false
     _filter.value.owner = null
   }
 
@@ -145,6 +154,10 @@ class PetsViewModel @Inject constructor(private val useCases: UseCases) : ViewMo
     useCases.addImage(filename, file)
       .collect { response -> _uploadResponse.value = response as Response<String> }
     return true
+  }
+
+  fun updateFavoriteList(list: ArrayList<String>) {
+    _favoriteList.value = list
   }
 
 }

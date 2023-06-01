@@ -1,12 +1,10 @@
 package com.example.adoptme.presentation.screens.components
 
-import android.widget.Toast
 import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.example.adoptme.R
 import com.example.adoptme.presentation.AuthViewModel
@@ -24,10 +22,6 @@ fun UpdateUserButton(viewModel: AuthViewModel) {
   )
   if (saved.value) {
     saved.value = false
-    Toast.makeText(
-      LocalContext.current,
-      stringResource(R.string.data_saved),
-      Toast.LENGTH_SHORT
-    )
+    viewModel.setError(stringResource(R.string.data_saved))
   }
 }

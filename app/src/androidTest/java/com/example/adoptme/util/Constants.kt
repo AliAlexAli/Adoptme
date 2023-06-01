@@ -8,6 +8,6 @@ object Constants {
   const val address = "Budapest"
   const val site = "www.test.hu"
 
-  const val petName = "Test pet"
+  const val petName = "PetName"
   const val petDescription = "Test description"
 }

@@ -1,9 +1,8 @@
-package com.vogella.android.espressofirst
+package com.example.adoptme
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.adoptme.R
 import com.example.adoptme.presentation.MainActivity
 import com.example.adoptme.presentation.screens.BaseScreen
 import com.example.adoptme.presentation.ui.theme.Theme
@@ -13,7 +12,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.*
-import kotlin.concurrent.schedule
 
 @RunWith(AndroidJUnit4::class)
 class AuthTests {

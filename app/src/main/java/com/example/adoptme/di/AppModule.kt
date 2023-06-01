@@ -11,7 +11,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
@@ -52,8 +51,7 @@ object AppModule {
     petsRef: CollectionReference,
     petsQuery: Query,
     storageRef: StorageReference,
-    firebaseMessaging: FirebaseMessaging
-  ): PetsRepository = PetsRepositoryImpl(petsRef, petsQuery, storageRef, firebaseMessaging)
+  ): PetsRepository = PetsRepositoryImpl(petsRef, petsQuery, storageRef)
 
   @Provides
   fun provideOwnersRepository(

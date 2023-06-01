@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.adoptme.domain.model.util.NavigationEnum
 import com.example.adoptme.presentation.AuthViewModel
 import com.example.adoptme.presentation.screens.components.*
@@ -23,47 +22,40 @@ import kotlinx.coroutines.launch
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun LoginScreen(navController: NavController, viewModel: AuthViewModel) {
-  val focusManager = LocalFocusManager.current
-  val backstackEntry = navController.currentBackStackEntryAsState()
+    val focusManager = LocalFocusManager.current
 
-  val scaffoldState = rememberScaffoldState()
-  val scope = rememberCoroutineScope()
-  val currentScreen =
-    NavigationEnum.fromRoute(backstackEntry.value?.destination?.route, viewModel.isLoggedIn)
+    val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
 
-  if(viewModel.isLoggedIn.value) LaunchedEffect(Unit){ navController.navigate(NavigationEnum.Main.name)}
+    if (viewModel.isLoggedIn.value) LaunchedEffect(Unit) { navController.navigate(NavigationEnum.Main.name) }
 
-  if (viewModel.error.value.isNotBlank()) scope.launch {
-    scaffoldState.snackbarHostState.showSnackbar(
-      viewModel.error.value
-    )
-  }
-
-  Scaffold(
-    scaffoldState = scaffoldState,
-    topBar = { AuthTopBar(currentScreen, scope, scaffoldState) },
-    drawerContent = {
-      AuthDrawerContent(
-        navController = navController,
-        scope = scope,
-        scaffoldState = scaffoldState
-      )
+    if (viewModel.error.value.isNotBlank()) scope.launch {
+        scaffoldState.snackbarHostState.showSnackbar(
+            viewModel.error.value
+        )
     }
-  ) {
-    Column(
-      modifier = Modifier
-        .fillMaxSize()
-        .background(MaterialTheme.colors.background),
-      verticalArrangement = Arrangement.Center,
-      horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-      EmailField(focusManager, viewModel)
-      Spacer(modifier = Modifier.height(30.dp))
-      PasswordField(focusManager, viewModel)
-      Spacer(modifier = Modifier.height(30.dp))
-      ButtonEmailPasswordLogin(viewModel)
+
+    Scaffold(scaffoldState = scaffoldState,
+        topBar = { AuthTopBar(NavigationEnum.Login, scope, scaffoldState) },
+        drawerContent = {
+            AuthDrawerContent(
+                navController = navController, scope = scope, scaffoldState = scaffoldState
+            )
+        }) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colors.background),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            EmailField(focusManager, viewModel)
+            Spacer(modifier = Modifier.height(30.dp))
+            PasswordField(focusManager, viewModel)
+            Spacer(modifier = Modifier.height(30.dp))
+            ButtonEmailPasswordLogin(viewModel)
+        }
     }
-  }
 }
 
 

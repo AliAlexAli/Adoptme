@@ -19,7 +19,7 @@ class OwnersRepositoryImpl @Inject constructor(
 ) : OwnersRepository {
   override suspend fun getOwnerFromFirestore(id: String) =
     callbackFlow {
-      val snapshotListener = ownersRef.whereEqualTo("id", id).addSnapshotListener { snapshot, e ->
+      val snapshotListener = ownersRef.whereEqualTo("id", id).addSnapshotListener { snapshot, _ ->
         val response = if (snapshot != null) {
           val owner = snapshot.toObjects(Owner::class.java)
           owner.first()
@@ -38,7 +38,7 @@ class OwnersRepositoryImpl @Inject constructor(
   override suspend fun getOwnerFromFirestoreByEmail(email: String) =
     callbackFlow {
       val snapshotListener =
-        ownersRef.whereEqualTo("email", email).addSnapshotListener { snapshot, e ->
+        ownersRef.whereEqualTo("email", email).addSnapshotListener { snapshot, _ ->
           if (snapshot != null) {
             Log.d("getUserOwner", email + snapshot.size())
             val owner = snapshot.toObjects(Owner::class.java)
